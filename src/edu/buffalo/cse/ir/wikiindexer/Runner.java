@@ -6,6 +6,7 @@ package edu.buffalo.cse.ir.wikiindexer;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -15,6 +16,7 @@ import org.junit.runner.JUnitCore;
 import edu.buffalo.cse.ir.wikiindexer.IndexerConstants.RequiredConstant;
 import edu.buffalo.cse.ir.wikiindexer.parsers.Parser;
 import edu.buffalo.cse.ir.wikiindexer.test.AllTests;
+import edu.buffalo.cse.ir.wikiindexer.test.PropertiesBasedTest;
 import edu.buffalo.cse.ir.wikiindexer.wikipedia.WikipediaDocument;
 
 /**
@@ -43,11 +45,15 @@ public class Runner {
 						String mode = args[1].substring(1).toLowerCase();
 						
 						if ("t".equals(mode)) {
+							System.out.println("Running tests");
 							runTests(filename);
 						} else if ("i".equals(mode)) {
+							System.out.println("Running indexer");
 							runIndexer(properties);
 						} else if ("b".equals(mode)) {
+							System.out.println("Running tests");
 							runTests(filename);
+							System.out.println("Running indexer");
 							runIndexer(properties);
 						} else {
 							System.err.println("Invalid mode specified!");
@@ -87,6 +93,12 @@ public class Runner {
 		Parser parser = new Parser(properties);
 		ConcurrentLinkedQueue<WikipediaDocument> queue = new ConcurrentLinkedQueue<WikipediaDocument>();
 		parser.parse(FileUtil.getDumpFileName(properties), queue);
+		Iterator<WikipediaDocument> iterator = queue.iterator();
+		WikipediaDocument wdoc;
+		while(iterator.hasNext()){
+			wdoc = iterator.next();
+			System.out.println(wdoc.getId()+" "+wdoc.getAuthor()+" "+wdoc.getTitle()+" "+wdoc.getPublishDate());
+		}
 		//TODO: More code to be added here!
 		
 	}
@@ -98,8 +110,12 @@ public class Runner {
 	private static void runTests(String filename) {
 		System.setProperty("PROPSFILENAME", filename);
 		JUnitCore core = new JUnitCore();
+		System.out.println("All tests");
 		core.run(new Computer(), AllTests.class);
-		
+		//System.out.println("Prop based tests");
+		//core.run(new Computer(), PropertiesBasedTest.class);
+		//System.out.println("Parser test");
+		//core.run(new Computer(), ParserTest.class);
 	}
 	
 	/**
@@ -108,11 +124,12 @@ public class Runner {
 	 * @return The loaded object
 	 */
 	private static Properties loadProperties(String filename) {
-
+		System.out.println("in load props");
 		try {
 			Properties props = FileUtil.loadProperties(filename);
 			
 			if (validateProps(props)) {
+				System.out.println("props valid");
 				return props;
 			} else {
 				System.err.println("Some properties were either not loaded or recognized. Please refer to the manual for more details");
@@ -134,6 +151,7 @@ public class Runner {
 	 */
 	private static boolean validateProps(Properties props) {
 		/* Validate size */
+		System.out.println("in validate props");
 		if (props != null && props.entrySet().size() == IndexerConstants.NUM_PROPERTIES) {
 			/* Get all required properties and ensure they have been set */
 			Field[] flds = IndexerConstants.class.getDeclaredFields();
